@@ -39,8 +39,18 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const pauseMenu = document.getElementById('pause-menu');
+const pauseTitle = document.getElementById('pause-title');
+const pauseMainView = document.getElementById('pause-main');
+const pauseControlsView = document.getElementById('pause-controls');
+const resumeBtn = document.getElementById('resume-btn');
+const menuRestartBtn = document.getElementById('menu-restart-btn');
+const showControlsBtn = document.getElementById('show-controls-btn');
+const controlsBackBtn = document.getElementById('controls-back-btn');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+// Vista activa del menú de pausa: 'main' | 'controls'
+let pauseView = 'main';
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -220,24 +230,53 @@ function drawNext() {
 
 function endGame() {
   gameOver = true;
+  paused = false;
   cancelAnimationFrame(animId);
+  pauseMenu.classList.add('hidden');
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
 }
 
+function showPauseView(view) {
+  pauseView = view === 'controls' ? 'controls' : 'main';
+  const onControls = pauseView === 'controls';
+  pauseMainView.classList.toggle('hidden', onControls);
+  pauseControlsView.classList.toggle('hidden', !onControls);
+  pauseTitle.textContent = onControls ? 'CONTROLES' : 'PAUSA';
+}
+
+function openPauseMenu() {
+  if (gameOver || paused) return;
+  paused = true;
+  cancelAnimationFrame(animId);
+  showPauseView('main');
+  pauseMenu.classList.remove('hidden');
+}
+
+function closePauseMenu() {
+  pauseMenu.classList.add('hidden');
+  showPauseView('main');
+  if (!paused) return;
+  paused = false;
+  if (gameOver) return;
+  lastTime = performance.now();
+  dropAccum = 0;
+  cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(loop);
+}
+
 function togglePause() {
   if (gameOver) return;
-  paused = !paused;
-  if (!paused) {
-    lastTime = performance.now();
-    loop(lastTime);
-  } else {
-    cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
-  }
+  if (paused) closePauseMenu();
+  else openPauseMenu();
+}
+
+function restartGame() {
+  pauseMenu.classList.add('hidden');
+  showPauseView('main');
+  paused = false;
+  init();
 }
 
 function loop(ts) {
@@ -270,12 +309,20 @@ function init() {
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  pauseMenu.classList.add('hidden');
+  showPauseView('main');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    e.preventDefault();
+    // Dentro de la sub-vista de controles, las teclas de menú vuelven atrás.
+    if (paused && pauseView === 'controls') showPauseView('main');
+    else togglePause();
+    return;
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -299,6 +346,10 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', restartGame);
+resumeBtn.addEventListener('click', closePauseMenu);
+menuRestartBtn.addEventListener('click', restartGame);
+showControlsBtn.addEventListener('click', () => showPauseView('controls'));
+controlsBackBtn.addEventListener('click', () => showPauseView('main'));
 
 init();
