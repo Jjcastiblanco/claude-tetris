@@ -1,3 +1,89 @@
+/* ---- Variables de tema ---- */
+/* El selector de skin escribe data-theme en <html>; todo el chrome de la
+   página (marco, HUD, botones) se repinta desde estas custom properties. */
+:root,
+:root[data-theme='retro'] {
+  --bg: #0f0f17;
+  --fg: #e0e0e0;
+  --accent: #7aa2f7;
+  --accent-hover: #9bbdff;
+  --accent-glow: rgba(122, 162, 247, 0.5);
+  --surface: #1a1a25;
+  --border: #2a2a3a;
+  --label: #555570;
+  --muted: #888888;
+  --kbd-bg: #22223a;
+  --kbd-border: #3a3a5a;
+  --kbd-fg: #aaaaaa;
+  --danger: #e57373;
+  --overlay-bg: rgba(10, 10, 20, 0.75);
+  --board-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  --radius: 4px;
+  --btn-radius: 6px;
+}
+
+:root[data-theme='neon'] {
+  --bg: #05010f;
+  --fg: #f0eaff;
+  --accent: #00e5ff;
+  --accent-hover: #7df9ff;
+  --accent-glow: rgba(0, 229, 255, 0.7);
+  --surface: #0d0524;
+  --border: #3a1e78;
+  --label: #8a6fd6;
+  --muted: #b39ddb;
+  --kbd-bg: #1a0b3d;
+  --kbd-border: #6c2ee0;
+  --kbd-fg: #e0c8ff;
+  --danger: #ff1744;
+  --overlay-bg: rgba(5, 1, 15, 0.8);
+  --board-shadow: 0 0 50px rgba(108, 46, 224, 0.45);
+}
+
+:root[data-theme='pastel'] {
+  --bg: #f6f1fa;
+  --fg: #4a4458;
+  --accent: #8b7bd8;
+  --accent-hover: #a596e8;
+  --accent-glow: rgba(139, 123, 216, 0.35);
+  --surface: #fffdff;
+  --border: #e0d6ec;
+  --label: #a396b8;
+  --muted: #7d7490;
+  --kbd-bg: #ece5f5;
+  --kbd-border: #d6c9e8;
+  --kbd-fg: #6b6280;
+  --danger: #e58f9a;
+  --overlay-bg: rgba(246, 241, 250, 0.82);
+  --board-shadow: 0 8px 30px rgba(139, 123, 216, 0.2);
+  --radius: 14px;
+  --btn-radius: 999px;
+}
+
+:root[data-theme='pixel'] {
+  --bg: #15150e;
+  --fg: #e8e0c0;
+  --accent: #e8c547;
+  --accent-hover: #ffe066;
+  --accent-glow: rgba(232, 197, 71, 0.4);
+  --surface: #22221a;
+  --border: #4a4630;
+  --label: #8a8256;
+  --muted: #a8a074;
+  --kbd-bg: #2e2c1e;
+  --kbd-border: #5c5638;
+  --kbd-fg: #d6cc9a;
+  --danger: #d64550;
+  --overlay-bg: rgba(21, 21, 14, 0.82);
+  --board-shadow: 0 0 0 4px #4a4630;
+  --radius: 0px;
+  --btn-radius: 0px;
+}
+
+:root[data-theme='pixel'] body {
+  font-family: 'Courier New', Courier, monospace;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -5,14 +91,15 @@
 }
 
 body {
-  background: #0f0f17;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--fg);
   font-family: system-ui, -apple-system, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   user-select: none;
+  transition: background 0.2s, color 0.2s;
 }
 
 .wrapper {
@@ -24,8 +111,8 @@ body {
   font-size: 32px;
   font-weight: 800;
   letter-spacing: 8px;
-  color: #7aa2f7;
-  text-shadow: 0 0 20px rgba(122, 162, 247, 0.5);
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-glow);
   margin-bottom: 20px;
 }
 
@@ -37,10 +124,10 @@ body {
 
 #board {
   display: block;
-  border: 1px solid #2a2a3a;
-  background: #1a1a25;
-  border-radius: 4px;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--board-shadow);
 }
 
 /* ---- Panel lateral ---- */
@@ -61,7 +148,7 @@ body {
 .label {
   font-size: 10px;
   letter-spacing: 2px;
-  color: #555570;
+  color: var(--label);
   font-weight: 600;
 }
 
@@ -69,15 +156,55 @@ body {
   font-family: 'Courier New', Courier, monospace;
   font-size: 26px;
   font-weight: 700;
-  color: #7aa2f7;
+  color: var(--accent);
   letter-spacing: 1px;
 }
 
 #next-canvas {
   display: block;
-  border: 1px solid #2a2a3a;
-  background: #1a1a25;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+/* ---- Selector de skin ---- */
+.skin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skin-select {
+  width: 100%;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.2s, color 0.2s;
+}
+
+.skin-select:hover {
+  border-color: var(--accent);
+}
+
+.skin-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.overlay-skin {
+  min-width: 160px;
+  align-items: center;
+  text-align: center;
+}
+
+.overlay-skin.hidden {
+  display: none;
 }
 
 /* ---- Controles ---- */
@@ -90,20 +217,20 @@ body {
 
 .controls li {
   font-size: 12px;
-  color: #888;
+  color: var(--muted);
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
 kbd {
-  background: #22223a;
-  border: 1px solid #3a3a5a;
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
   border-radius: 3px;
   padding: 1px 6px;
   font-size: 11px;
   font-family: inherit;
-  color: #aaa;
+  color: var(--kbd-fg);
 }
 
 /* ---- Overlay ---- */
@@ -113,9 +240,9 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 20, 0.75);
+  background: var(--overlay-bg);
   backdrop-filter: blur(4px);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 .overlay.hidden {
@@ -134,21 +261,21 @@ kbd {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 4px;
-  color: #e57373;
+  color: var(--danger);
 }
 
 #overlay-score {
   font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
-  color: #7aa2f7;
+  color: var(--accent);
 }
 
 #restart-btn {
   margin-top: 8px;
-  background: #7aa2f7;
-  color: #0f0f17;
+  background: var(--accent);
+  color: var(--bg);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--btn-radius);
   padding: 10px 28px;
   font-size: 14px;
   font-weight: 700;
@@ -158,5 +285,5 @@ kbd {
 }
 
 #restart-btn:hover {
-  background: #9bbdff;
+  background: var(--accent-hover);
 }

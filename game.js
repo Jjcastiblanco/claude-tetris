@@ -39,6 +39,7 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const pauseSkin = document.getElementById('pause-skin');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -158,6 +159,10 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
+  if (typeof drawThemedBlock === 'function') {
+    drawThemedBlock(context, x, y, colorIndex, size, alpha);
+    return;
+  }
   const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
@@ -168,8 +173,16 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   context.globalAlpha = 1;
 }
 
+function gridColor() {
+  if (typeof themeColors === 'function') {
+    const colors = themeColors();
+    if (colors && colors.grid) return colors.grid;
+  }
+  return '#22222e';
+}
+
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = gridColor();
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -218,11 +231,65 @@ function drawNext() {
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
 }
 
+/* ---- Selector de skin (unidad 7) ---- */
+
+const skinSelects = [];
+
+function currentThemeId() {
+  if (typeof getTheme === 'function') {
+    const theme = getTheme();
+    if (theme && theme.id) return theme.id;
+  }
+  return null;
+}
+
+function repaintTheme() {
+  const id = currentThemeId();
+  if (id) document.documentElement.setAttribute('data-theme', id);
+  for (const select of skinSelects) {
+    if (id && select.value !== id) select.value = id;
+  }
+  // Repintado inmediato: el tablero se conserva, no hay reinicio ni recarga.
+  if (next) drawNext();
+  if (board && current) draw();
+}
+
+function applyTheme(id) {
+  if (typeof setTheme === 'function') setTheme(id);
+  repaintTheme();
+}
+
+function buildSkinSelect(mount) {
+  const select = document.createElement('select');
+  select.className = 'skin-select';
+  select.setAttribute('aria-label', 'Skin');
+  for (const theme of THEMES) {
+    const option = document.createElement('option');
+    option.value = theme.id;
+    option.textContent = theme.name || theme.id;
+    select.appendChild(option);
+  }
+  select.addEventListener('change', () => applyTheme(select.value));
+  // Evita que las flechas del selector muevan la pieza.
+  select.addEventListener('keydown', e => e.stopPropagation());
+  mount.appendChild(select);
+  skinSelects.push(select);
+}
+
+function initSkinSelector() {
+  if (typeof THEMES === 'undefined' || !Array.isArray(THEMES)) return;
+  for (const mount of document.querySelectorAll('[data-skin-mount]')) {
+    buildSkinSelect(mount);
+  }
+  repaintTheme();
+}
+
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  if (pauseSkin) pauseSkin.classList.add('hidden');
   overlay.classList.remove('hidden');
 }
 
@@ -230,12 +297,15 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    if (pauseSkin) pauseSkin.classList.add('hidden');
+    overlay.classList.add('hidden');
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
     overlayTitle.textContent = 'PAUSA';
     overlayScore.textContent = '';
+    if (pauseSkin) pauseSkin.classList.remove('hidden');
     overlay.classList.remove('hidden');
   }
 }
@@ -269,12 +339,16 @@ function init() {
   next = randomPiece();
   spawn();
   updateHUD();
+  if (pauseSkin) pauseSkin.classList.add('hidden');
   overlay.classList.add('hidden');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
+  // No capturar teclas mientras se usa un control de formulario (selector de skin).
+  const tag = e.target && e.target.tagName;
+  if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -301,4 +375,5 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
+initSkinSelector();
 init();

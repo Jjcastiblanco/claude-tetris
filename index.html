@@ -31,6 +31,10 @@
           <canvas id="next-canvas" width="120" height="120"></canvas>
         </div>
 
+        <div class="panel-section skin-section" data-skin-mount="panel">
+          <span class="label">SKIN</span>
+        </div>
+
         <div class="panel-section controls">
           <span class="label">CONTROLS</span>
           <ul>
@@ -48,11 +52,16 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <div id="pause-skin" class="skin-section overlay-skin hidden" data-skin-mount="pause">
+          <span class="label">SKIN</span>
+        </div>
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>
   </div>
 
+  <script src="themes.js"></script>
+  <!-- storage.js (registros) lo añaden las unidades 3-5 antes de game.js -->
   <script src="game.js"></script>
 </body>
 </html>
