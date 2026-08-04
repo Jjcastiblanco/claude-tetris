@@ -143,8 +143,11 @@ kbd {
   color: #7aa2f7;
 }
 
-#restart-btn {
-  margin-top: 8px;
+#restart-btn,
+#play-btn,
+#save-record-btn,
+.btn-secondary,
+.btn-danger {
   background: #7aa2f7;
   color: #0f0f17;
   border: none;
@@ -154,9 +157,184 @@ kbd {
   font-weight: 700;
   cursor: pointer;
   letter-spacing: 1px;
+  font-family: inherit;
   transition: background 0.15s;
 }
 
-#restart-btn:hover {
+#restart-btn {
+  margin-top: 8px;
+}
+
+#restart-btn:hover,
+#play-btn:hover,
+#save-record-btn:hover {
   background: #9bbdff;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #7aa2f7;
+  border: 1px solid #3a3a5a;
+  padding: 7px 18px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.btn-secondary:hover {
+  background: #1a1a2e;
+  color: #9bbdff;
+}
+
+.btn-danger {
+  background: #e57373;
+  color: #0f0f17;
+  padding: 7px 18px;
+  font-size: 12px;
+}
+
+.btn-danger:hover {
+  background: #ef9a9a;
+}
+
+/* ---- Pantalla de inicio ---- */
+#start-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: #7aa2f7;
+}
+
+.reset-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #b0b0c0;
+}
+
+.reset-confirm.hidden,
+#reset-records-block.hidden,
+.record-form.hidden,
+.records.hidden,
+.records-stats.hidden {
+  display: none;
+}
+
+.reset-confirm-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- Tabla de records ---- */
+.records {
+  width: 260px;
+}
+
+.records-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #555570;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.records table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+}
+
+.records th {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #555570;
+  text-align: left;
+  padding: 2px 4px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.records td {
+  padding: 3px 4px;
+  color: #b0b0c0;
+  border-top: 1px solid #22222e;
+}
+
+.records td.col-rank {
+  color: #555570;
+  width: 18px;
+}
+
+.records td.col-score,
+.records th.col-score,
+.records td.col-lines,
+.records th.col-lines {
+  text-align: right;
+}
+
+.records td.col-name {
+  color: #e0e0e0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.records tr.highlight td {
+  color: #7aa2f7;
+  background: rgba(122, 162, 247, 0.12);
+  font-weight: 700;
+}
+
+.records-empty {
+  font-size: 12px;
+  color: #666680;
+  font-style: italic;
+}
+
+.records-stats {
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+/* ---- Formulario de nuevo record ---- */
+.record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.record-form-label {
+  font-size: 12px;
+  color: #ffd54f;
+  font-weight: 600;
+}
+
+.record-form-row {
+  display: flex;
+  gap: 8px;
+}
+
+#player-name {
+  background: #1a1a25;
+  border: 1px solid #3a3a5a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 14px;
+  width: 140px;
+}
+
+#player-name:focus {
+  outline: none;
+  border-color: #7aa2f7;
+}
+
+#save-record-btn {
+  padding: 8px 18px;
+  font-size: 13px;
 }

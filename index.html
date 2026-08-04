@@ -48,11 +48,45 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <form id="record-form" class="record-form hidden" autocomplete="off">
+          <label class="record-form-label" for="player-name">¡Entraste en el top 5! Tu nombre:</label>
+          <div class="record-form-row">
+            <input id="player-name" type="text" maxlength="12" placeholder="Jugador" />
+            <button type="submit" id="save-record-btn">Guardar</button>
+          </div>
+        </form>
+
+        <div id="overlay-records" class="records"></div>
+        <p id="overlay-stats" class="records-stats"></p>
+
         <button id="restart-btn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div id="start-screen" class="overlay">
+      <div class="overlay-box">
+        <p id="start-title">TETRIS</p>
+        <div id="start-records" class="records"></div>
+        <p id="start-stats" class="records-stats"></p>
+
+        <button id="play-btn">Jugar</button>
+
+        <div id="reset-records-block">
+          <button id="reset-records-btn" class="btn-secondary">Resetear records</button>
+        </div>
+        <div id="reset-confirm" class="reset-confirm hidden">
+          <span>¿Seguro que quieres borrar todos los records?</span>
+          <div class="reset-confirm-row">
+            <button id="reset-yes-btn" class="btn-danger">Sí, borrar</button>
+            <button id="reset-no-btn" class="btn-secondary">Cancelar</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <script src="storage.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
