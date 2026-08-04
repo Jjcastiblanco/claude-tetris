@@ -57,7 +57,7 @@ function saveRecord(entry) {
   try {
     localStorage.setItem(RECORDS_KEY, JSON.stringify(records.slice(0, MAX_RECORDS)));
   } catch (e) {
-    /* almacenamiento no disponible */
+    return -1; // no se pudo persistir: no reportar un puesto que no existe
   }
   return rank;
 }

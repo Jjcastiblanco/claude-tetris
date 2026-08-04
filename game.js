@@ -371,7 +371,9 @@ function submitRecord(e) {
         combo: currentMaxCombo(),
         date: new Date().toISOString(),
       });
-      if (typeof result === 'number' && result >= 0) saved = result;
+      // Si la capa de almacenamiento informa del puesto real, mandamos ella:
+      // un valor negativo significa que no se pudo guardar y no se resalta nada.
+      if (typeof result === 'number') saved = result;
     } catch (err) {
       saved = -1;
     }
