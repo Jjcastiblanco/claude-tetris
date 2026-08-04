@@ -28,6 +28,16 @@ const PIECES = [
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
+const MIN_START_LEVEL = 1;
+const MAX_START_LEVEL = 15;
+const START_LEVEL_KEY = 'tetris.startLevel';
+
+// Teclas que controlan la partida: nunca deben llegar al navegador ni al juego
+// mientras el menú de pausa está abierto.
+const GAME_KEYS = new Set([
+  'ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', 'KeyX', 'Space',
+]);
+
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const nextCanvas = document.getElementById('next-canvas');
@@ -39,8 +49,82 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const startLevelSelect = document.getElementById('start-level-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+
+// Nivel inicial elegido por el jugador. Se aplica en el próximo init().
+let startLevel = loadStartLevel();
+// Nivel inicial con el que arrancó la partida en curso (congelado en init()).
+let runStartLevel = startLevel;
+
+// Teclas físicamente pulsadas y teclas que deben soltarse antes de volver a
+// contar (evita que una tecla mantenida durante la pausa mueva la pieza al
+// reanudar).
+const heldKeys = new Set();
+const blockedKeys = new Set();
+
+function clampStartLevel(value) {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return MIN_START_LEVEL;
+  return Math.min(MAX_START_LEVEL, Math.max(MIN_START_LEVEL, n));
+}
+
+function loadStartLevel() {
+  try {
+    const raw = localStorage.getItem(START_LEVEL_KEY);
+    if (raw === null) return MIN_START_LEVEL;
+    return clampStartLevel(raw);
+  } catch (err) {
+    return MIN_START_LEVEL;
+  }
+}
+
+function saveStartLevel(value) {
+  try {
+    localStorage.setItem(START_LEVEL_KEY, String(value));
+  } catch (err) {
+    /* localStorage no disponible (modo privado / file://): se ignora */
+  }
+}
+
+function setStartLevel(value) {
+  startLevel = clampStartLevel(value);
+  saveStartLevel(startLevel);
+  if (startLevelSelect) startLevelSelect.value = String(startLevel);
+  return startLevel;
+}
+
+function levelDropInterval(lv) {
+  return Math.max(100, 1000 - (lv - 1) * 90);
+}
+
+// El menú de pausa (Unidad 1) puede exponer su propio flag; si no existe,
+// basta con el estado de pausa del juego.
+function isMenuOpen() {
+  if (typeof pauseMenuOpen !== 'undefined' && pauseMenuOpen) return true;
+  return paused === true;
+}
+
+// Cualquier tecla de juego pulsada ahora mismo queda neutralizada hasta que se
+// suelte. Se llama al reanudar y al iniciar una partida.
+function blockHeldKeys() {
+  heldKeys.forEach(code => blockedKeys.add(code));
+}
+
+// Devuelve el foco al documento: si queda en un botón o en el selector, sus
+// teclas dejarían de llegar al juego.
+function releaseFocus() {
+  const el = document.activeElement;
+  if (isFormControl(el) && typeof el.blur === 'function') el.blur();
+}
+
+function isFormControl(el) {
+  if (!el || !el.tagName) return false;
+  const tag = el.tagName;
+  return tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA' ||
+    tag === 'BUTTON' || tag === 'OPTION' || el.isContentEditable === true;
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -106,8 +190,8 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = runStartLevel + Math.floor(lines / 10);
+    dropInterval = levelDropInterval(level);
     updateHUD();
   }
 }
@@ -230,7 +314,12 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    // Neutraliza cualquier tecla que siguiera pulsada durante la pausa.
+    blockHeldKeys();
+    releaseFocus();
+    overlay.classList.add('hidden');
     lastTime = performance.now();
+    dropAccum = 0;
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
@@ -260,11 +349,14 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  runStartLevel = clampStartLevel(startLevel);
+  level = runStartLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = levelDropInterval(level);
   dropAccum = 0;
+  blockHeldKeys();
+  releaseFocus();
   lastTime = performance.now();
   next = randomPiece();
   spawn();
@@ -275,8 +367,31 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  // Los controles de formulario (selector de nivel, botones del menú) manejan
+  // sus propias teclas.
+  if (isFormControl(e.target)) return;
+
+  const isGameKey = GAME_KEYS.has(e.code);
+  if (isGameKey) {
+    // Siempre: evita el scroll de la página con Space/flechas, tanto en juego
+    // como con el menú abierto.
+    e.preventDefault();
+    heldKeys.add(e.code);
+  }
+
+  if (e.code === 'KeyP') {
+    heldKeys.add(e.code);
+    togglePause();
+    return;
+  }
+
+  // Menú abierto: ningún input llega al juego. Las flechas sólo navegan el
+  // menú (manejado por su propio listener).
+  if (isMenuOpen() || gameOver) return;
+
+  // Tecla pulsada desde antes de reanudar: hay que soltarla primero.
+  if (blockedKeys.has(e.code)) return;
+
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -292,12 +407,36 @@ document.addEventListener('keydown', e => {
       tryRotate();
       break;
     case 'Space':
-      e.preventDefault();
       hardDrop();
       break;
   }
   updateHUD();
 });
+
+document.addEventListener('keyup', e => {
+  heldKeys.delete(e.code);
+  blockedKeys.delete(e.code);
+});
+
+// Si la ventana pierde el foco no llegan los keyup: se olvida todo lo pulsado.
+window.addEventListener('blur', () => {
+  heldKeys.clear();
+  blockedKeys.clear();
+});
+
+/* ---- Selector de nivel inicial (bloque autónomo) ---- */
+if (startLevelSelect) {
+  for (let lv = MIN_START_LEVEL; lv <= MAX_START_LEVEL; lv++) {
+    const opt = document.createElement('option');
+    opt.value = String(lv);
+    opt.textContent = String(lv);
+    startLevelSelect.appendChild(opt);
+  }
+  startLevelSelect.value = String(startLevel);
+  startLevelSelect.addEventListener('change', () => {
+    setStartLevel(startLevelSelect.value);
+  });
+}
 
 restartBtn.addEventListener('click', init);
 
